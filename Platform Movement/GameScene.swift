@@ -15,7 +15,7 @@ class GameScene: SKScene {
     let jump = SKSpriteNode(imageNamed: "jump")
     let rightControl = SKSpriteNode(imageNamed: "rightControl")
     let leftControl = SKSpriteNode(imageNamed: "leftControl")
-    let ground = SKSpriteNode(imageNamed: "groundPlaceHolder")
+    let ground = SKSpriteNode(imageNamed: "groundPlaceHolder2")
     var man = SKSpriteNode(texture: SKTexture(imageNamed: "run_0"))
     var manBaseline = CGFloat(0)
 
@@ -40,13 +40,13 @@ class GameScene: SKScene {
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
         
-        self.leftControl.position = CGPointMake(CGRectGetMinX(self.frame) + (self.leftControl.size.width), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2)))
+        self.leftControl.position = CGPointMake(CGRectGetMinX(self.frame) + (self.leftControl.size.width), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2.2)))
         addChild(self.leftControl)
         
-        self.jump.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.jump.size.width * 2), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2)))
+        self.jump.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.jump.size.width * 2), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2.2)))
         addChild(self.jump)
         
-        self.rightControl.position = CGPointMake(CGRectGetMinX(self.frame) + (self.leftControl.size.width * 2), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2)))
+        self.rightControl.position = CGPointMake(CGRectGetMinX(self.frame) + (self.leftControl.size.width * 2), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2.2)))
         addChild(self.rightControl)
         
         stageMaxRight = self.size.width / 2
@@ -66,6 +66,10 @@ class GameScene: SKScene {
         
         self.addChild(man)
         self.addChild(self.ground)
+        
+        self.leftControl.zPosition = self.ground.zPosition + 1
+        self.rightControl.zPosition = self.ground.zPosition + 1
+        self.jump.zPosition = self.ground.zPosition + 1
         
         
         
