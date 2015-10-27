@@ -19,6 +19,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let ground = SKSpriteNode(imageNamed: "groundPlaceHolder2")
     var man = SKSpriteNode(texture: SKTexture(imageNamed: "run_0"))
     var manBaseline = CGFloat(0)
+    var enemy = SKSpriteNode(texture: SKTexture(imageNamed: "enemy_1"))
+    var enemyLeft = false
+    var enemyRight = false
+    var enemyPosition:CGFloat = 0.0
+    var runningEnemyTextures = [SKTexture]()
 
     var bullet1 = SKSpriteNode(imageNamed: "bullet1")
     var bullet1IsOn = false
@@ -29,7 +34,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var watchBombIsOn = false
     var watchBombVelocityX = CGFloat(0)
     var watchBombVelocityY = CGFloat(0)
-    
+
 
     var onGround = true
     var velocityY = CGFloat(0)
@@ -83,13 +88,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.watchAttack0.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.jump.size.width * 2), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2.2) + 60 ))
         
         
-        
-        
-        
+        //enemyMovement("right")
         
         stageMaxRight = self.size.width / 2
         stageMaxLeft = -stageMaxRight
         loadManTextures()
+        loadEnemyTextures()
         self.man.name = "man"
         self.watchBomb.name = "watchBomb"
 
@@ -99,17 +103,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.manBaseline = self.ground.position.y + (self.ground.size.height / 2 ) + (self.man.size.height/2)
         self.man.position = CGPointMake(CGRectGetMinX(self.frame) + (self.man.size.width * 2 ), self.manBaseline)
+        self.enemy.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.enemy.size.width * 2 ), self.manBaseline + 15)
         
         self.man.zPosition = self.ground.zPosition + 1
         
-        
         self.addChild(man)
+        self.addChild(enemy)
         self.addChild(self.ground)
+        enemyPosition = self.enemy.position.x
         
         self.leftControl.zPosition = self.ground.zPosition + 1
         self.rightControl.zPosition = self.ground.zPosition + 1
         self.jump.zPosition = self.ground.zPosition + 1
+        self.enemy.zPosition = self.ground.zPosition + 1
         
+        enemyLeft = true
+        runEnemy()
         
         
     }
@@ -129,8 +138,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    
+    /*func enemyMovement(direction:String) {
+        if direction == "left" {
+            enemyLeft = true
+            enemy.xScale = -1
+            enemyRight = false
+            runEnemy()
+        } else {
+            enemyRight = true
+            enemy.xScale = 1
+            enemyLeft = false
+            runEnemy()
+        }
+        
+    }*/
+
+    
     func runMan() {
         man.runAction(SKAction.repeatActionForever(SKAction.animateWithTextures(runningManTextures, timePerFrame: 0.2, resize:false, restore:true)))
+    }
+    
+    func runEnemy() {
+        enemy.runAction(SKAction.repeatActionForever(SKAction.animateWithTextures(runningEnemyTextures, timePerFrame: 0.2, resize:false, restore:true)))
     }
     
     
@@ -216,6 +246,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let textureName = "run_\(i)"
             let temp = runningAtlas.textureNamed(textureName)
             runningManTextures.append(temp)
+        }
+    }
+    
+    func loadEnemyTextures() {
+        
+        let runningAtlas = SKTextureAtlas(named:"enemy")
+        for i in 1...3 {
+            
+            let textureName = "enemy_\(i)"
+            let temp = runningAtlas.textureNamed(textureName)
+            runningEnemyTextures.append(temp)
         }
     }
     
@@ -364,21 +405,96 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             watchBomb.position.x = stageMaxRight
            
-            if manLeft {
+            /*if watchBomb {
                 return
-            }
+            }*/
         }
         if watchBomb.position.x > stageMaxRight {
             watchBomb.position.x = stageMaxLeft
             
-            if manRight {
+            /*if manRight {
                 return
-            }
+            }*/
         }
 
         
         
             }
+    
+    /*func updateEnemyPosition() {
+        let enemyPosition = self.enemy.position.x
+        self.enemy.position.x += 8
+        
+        if self.enemy.position.x > enemyPosition + 100  {
+            
+            enemy.position.x = enemyPosition + 100
+            
+            enemyMovement("left")
+            
+            if enemyRight {
+                
+                return
+            }
+            
+        }
+        
+        if self.enemy.position.x < enemyPosition - 100 {
+            
+            enemy.position.x = enemyPosition - 100
+            
+            enemyMovement("right")
+            
+            if enemyLeft {
+                
+                return
+            }
+        }
+        
+        if enemyLeft {
+            enemy.position.x -= CGFloat(self.manSpeed)
+        } else if enemyRight {
+            enemy.position.x += CGFloat(self.manSpeed)
+        }
+        
+    }*/
+    
+    func updateEnemyPosition() {
+        
+        
+        
+        if enemyLeft == true {
+            
+            enemy.xScale = 1
+            
+            
+        self.enemy.position.x -= 1
+        
+        if self.enemy.position.x < enemyPosition - 30  {
+            
+            self.enemy.position.x = enemyPosition - 30
+            
+            enemyLeft = false
+            enemyRight = true
+        }
+        }
+
+            if enemyRight == true {
+                
+                enemy.xScale = -1
+                
+                
+            
+            self.enemy.position.x += 1
+            
+            if self.enemy.position.x > enemyPosition + 30 {
+                
+                self.enemy.position.x = enemyPosition + 30
+                
+                enemyRight = false
+                enemyLeft = true
+                }
+        }
+    }
     
     override func update(currentTime: CFTimeInterval) {
         
@@ -388,6 +504,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         updateManPosition()
         updateBullet1Position()
         updateWatchBombPosition()
+        updateEnemyPosition()
         
         
             if self.man.position.y < self.manBaseline {
