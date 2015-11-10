@@ -34,6 +34,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var watchBombIsOn = false
     var watchBombVelocityX = CGFloat(0)
     var watchBombVelocityY = CGFloat(0)
+    
+    var door = SKSpriteNode(imageNamed: "door")
+    var doorOpen = SKSpriteNode(imageNamed: "doorOpen")
+    var button = SKSpriteNode(imageNamed: "button")
+    var buttonOn = SKSpriteNode(imageNamed: "button2")
+    
 
 
     var onGround = true
@@ -56,6 +62,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         case man = 1
         case Bomb = 2
+        case door = 4
+        case button = 8
+        case enemy = 16
+        case bullet1 = 32
+        case buttonOn = 64
     }
     
     
@@ -96,6 +107,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         loadEnemyTextures()
         self.man.name = "man"
         self.watchBomb.name = "watchBomb"
+        self.door.name = "door"
+        self.button.name = "button"
 
         self.backgroundColor = UIColor.whiteColor()
         self.ground.anchorPoint = CGPointMake(0, 0.5)
@@ -105,21 +118,78 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.man.position = CGPointMake(CGRectGetMinX(self.frame) + (self.man.size.width * 2 ), self.manBaseline)
         self.enemy.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.enemy.size.width * 2 ), self.manBaseline + 15)
         
+        self.door.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.door.size.width * 8 ), self.manBaseline + 28)
+        
+        self.button.position = CGPointMake(CGRectGetMinX(self.frame) + (self.button.size.width - 5 ), self.manBaseline - 22)
+        
         self.man.zPosition = self.ground.zPosition + 1
         
         self.addChild(man)
         self.addChild(enemy)
         self.addChild(self.ground)
+        self.addChild(door)
+        self.addChild(button)
         enemyPosition = self.enemy.position.x
         
         self.leftControl.zPosition = self.ground.zPosition + 1
         self.rightControl.zPosition = self.ground.zPosition + 1
         self.jump.zPosition = self.ground.zPosition + 1
         self.enemy.zPosition = self.ground.zPosition + 1
+        self.man.zPosition = 3
+        self.door.zPosition = 4
+        self.doorOpen.zPosition = 4
+        self.watchBomb.zPosition = 3
+        self.button.zPosition = 3
+        
         
         enemyLeft = true
         runEnemy()
         
+        
+      
+       
+        self.man.physicsBody = SKPhysicsBody(rectangleOfSize: self.man.size)
+        self.man.physicsBody?.affectedByGravity = false
+        self.man.physicsBody?.categoryBitMask = ColliderType.man.rawValue
+        self.man.physicsBody?.contactTestBitMask = ColliderType.Bomb.rawValue | ColliderType.door.rawValue | ColliderType.button.rawValue
+        self.man.physicsBody?.collisionBitMask = ColliderType.Bomb.rawValue | ColliderType.door.rawValue | ColliderType.button.rawValue
+        
+        self.watchBomb.physicsBody = SKPhysicsBody(rectangleOfSize: self.watchBomb.size)
+        self.watchBomb.physicsBody?.dynamic = false
+        self.watchBomb.physicsBody?.categoryBitMask = ColliderType.Bomb.rawValue
+        self.watchBomb.physicsBody?.contactTestBitMask = ColliderType.man.rawValue
+        self.watchBomb.physicsBody?.collisionBitMask = ColliderType.man.rawValue
+        
+        self.door.physicsBody = SKPhysicsBody(rectangleOfSize: self.door.size)
+        self.door.physicsBody?.affectedByGravity = false
+        self.door.physicsBody?.dynamic = false
+        self.door.physicsBody?.categoryBitMask = ColliderType.door.rawValue
+        self.door.physicsBody?.contactTestBitMask = ColliderType.man.rawValue
+        self.door.physicsBody?.collisionBitMask = ColliderType.man.rawValue
+        
+        self.button.physicsBody = SKPhysicsBody(rectangleOfSize: self.button.size)
+        self.button.physicsBody?.affectedByGravity = false
+        self.button.physicsBody?.dynamic = false
+        self.button.physicsBody?.categoryBitMask = ColliderType.button.rawValue
+        self.button.physicsBody?.contactTestBitMask = ColliderType.man.rawValue
+        self.button.physicsBody?.collisionBitMask = ColliderType.man.rawValue
+        
+        self.bullet1.physicsBody = SKPhysicsBody(rectangleOfSize: self.bullet1.size)
+        self.bullet1.physicsBody?.affectedByGravity = false
+        self.bullet1.physicsBody?.dynamic = true
+        self.bullet1.physicsBody?.categoryBitMask = ColliderType.bullet1.rawValue
+        self.bullet1.physicsBody?.contactTestBitMask = ColliderType.enemy.rawValue
+        self.bullet1.physicsBody?.collisionBitMask = ColliderType.enemy.rawValue
+        
+        self.enemy.physicsBody = SKPhysicsBody(rectangleOfSize: self.enemy.size)
+        self.enemy.physicsBody?.affectedByGravity = false
+        self.enemy.physicsBody?.dynamic = true
+        self.enemy.physicsBody?.categoryBitMask = ColliderType.enemy.rawValue
+        self.enemy.physicsBody?.contactTestBitMask = ColliderType.bullet1.rawValue
+        self.enemy.physicsBody?.collisionBitMask = ColliderType.bullet1.rawValue
+        
+        
+
         
     }
     
@@ -285,9 +355,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isMoving = false
     }
     
-    func didBeginContact(contact: SKPhysicsContact) {
+    func didBeginContact(/*otherBody: SKPhysicsBody,*/contact: SKPhysicsContact) {
         
         
+        if contact.bodyB.categoryBitMask == ColliderType.Bomb.rawValue {
             print("das")
             watchBomb.removeFromParent()
             watchAttack0.removeFromParent()
@@ -295,9 +366,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             watchAttack = SKSpriteNode(imageNamed: "watchAttackRemain1")
             self.watchAttack.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.jump.size.width * 2), (CGRectGetMidY(self.frame) - (self.leftControl.size.height * 2.2) + 60 ))*/
             addChild(self.watchAttack)
-        watchBombIsOn = false
+            watchBombIsOn = false
+        }
+        /*switch(otherBody.categoryBitMask){*/
+        if contact.bodyA.categoryBitMask == ColliderType.man.rawValue || contact.bodyB.categoryBitMask == ColliderType.door.rawValue {
+            print("door")
+        }
+        
+        if contact.bodyB.categoryBitMask == ColliderType.button.rawValue {
+            
+            print("button")
+            doorOpen.position = door.position
+            door.removeFromParent()
+            buttonOn.position = button.position
+            button.removeFromParent()
+            self.addChild(buttonOn)
+            self.addChild(doorOpen)
+            
+        }
+        
+        if contact.bodyA.categoryBitMask == ColliderType.bullet1.rawValue || contact.bodyB.categoryBitMask == ColliderType.enemy.rawValue {
+            
+            print("shooting enemy")
+            enemy.removeFromParent()
+        }
+        
+        
+      
             
         
+    
     }
     
     func updateManPosition() {
@@ -513,8 +611,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.man.zRotation = 0
             self.onGround = true
                 
-                if watchBombIsOn == true {
-                    man.zPosition = watchBomb.zPosition
+                /*if watchBombIsOn == true {
+                    
                     self.man.physicsBody = SKPhysicsBody(rectangleOfSize: self.man.size)
                     self.man.physicsBody?.affectedByGravity = false
                     self.man.physicsBody?.categoryBitMask = ColliderType.man.rawValue
@@ -526,12 +624,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     self.watchBomb.physicsBody?.categoryBitMask = ColliderType.Bomb.rawValue
                     self.watchBomb.physicsBody?.contactTestBitMask = ColliderType.man.rawValue
                     self.watchBomb.physicsBody?.collisionBitMask = ColliderType.man.rawValue
-                }
+                }*/
 
                 
                 
         
         }
     }
-
 }
+
