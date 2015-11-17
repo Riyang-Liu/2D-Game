@@ -58,6 +58,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var manRight = false
     var IsManRight = true
     
+    var elevator = SKSpriteNode(imageNamed: "elevator")
+    var elevatorGoUp = false
+    var elevatorPosition:CGFloat = 0.0
+    
     enum ColliderType:UInt32 {
         
         case man = 1
@@ -67,6 +71,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case enemy = 16
         case bullet1 = 32
         case buttonOn = 64
+        case elevator = 128
+        case ground = 256
     }
     
     
@@ -116,11 +122,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.manBaseline = self.ground.position.y + (self.ground.size.height / 2 ) + (self.man.size.height/2)
         self.man.position = CGPointMake(CGRectGetMinX(self.frame) + (self.man.size.width * 2 ), self.manBaseline)
-        self.enemy.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.enemy.size.width * 2 ), self.manBaseline + 15)
+        self.enemy.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.enemy.size.width * 3 ), self.manBaseline + 15)
         
         self.door.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.door.size.width * 8 ), self.manBaseline + 28)
         
         self.button.position = CGPointMake(CGRectGetMinX(self.frame) + (self.button.size.width - 5 ), self.manBaseline - 22)
+        
+        self.elevator.position = CGPointMake(CGRectGetMaxX(self.frame) - (self.elevator.size.width ), self.manBaseline - 54)
+        
+        
+        
+        addChild(elevator)
+
         
         self.man.zPosition = self.ground.zPosition + 1
         
@@ -130,6 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(door)
         self.addChild(button)
         enemyPosition = self.enemy.position.x
+        elevatorPosition = self.elevator.position.y
         
         self.leftControl.zPosition = self.ground.zPosition + 1
         self.rightControl.zPosition = self.ground.zPosition + 1
@@ -140,6 +154,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.doorOpen.zPosition = 4
         self.watchBomb.zPosition = 3
         self.button.zPosition = 3
+        elevator.zPosition = 5
         
         
         enemyLeft = true
@@ -149,10 +164,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
       
        
         self.man.physicsBody = SKPhysicsBody(rectangleOfSize: self.man.size)
-        self.man.physicsBody?.affectedByGravity = false
+        self.man.physicsBody?.affectedByGravity = true
+        self.man.physicsBody?.dynamic = true
         self.man.physicsBody?.categoryBitMask = ColliderType.man.rawValue
-        self.man.physicsBody?.contactTestBitMask = ColliderType.Bomb.rawValue | ColliderType.door.rawValue | ColliderType.button.rawValue
-        self.man.physicsBody?.collisionBitMask = ColliderType.Bomb.rawValue | ColliderType.door.rawValue | ColliderType.button.rawValue
+        self.man.physicsBody?.contactTestBitMask = ColliderType.Bomb.rawValue | ColliderType.door.rawValue | ColliderType.button.rawValue | ColliderType.elevator.rawValue | ColliderType.ground.rawValue
+        self.man.physicsBody?.collisionBitMask = ColliderType.Bomb.rawValue | ColliderType.door.rawValue | ColliderType.button.rawValue | ColliderType.elevator.rawValue | ColliderType.ground.rawValue
         
         self.watchBomb.physicsBody = SKPhysicsBody(rectangleOfSize: self.watchBomb.size)
         self.watchBomb.physicsBody?.dynamic = false
@@ -188,6 +204,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.enemy.physicsBody?.contactTestBitMask = ColliderType.bullet1.rawValue
         self.enemy.physicsBody?.collisionBitMask = ColliderType.bullet1.rawValue
         
+        self.elevator.physicsBody = SKPhysicsBody(rectangleOfSize: self.elevator.size)
+        self.elevator.physicsBody?.affectedByGravity = false
+        self.elevator.physicsBody?.dynamic = false
+        self.elevator.physicsBody?.categoryBitMask = ColliderType.elevator.rawValue
+        self.elevator.physicsBody?.contactTestBitMask = ColliderType.man.rawValue
+        self.elevator.physicsBody?.collisionBitMask = ColliderType.man.rawValue
+
+        self.ground.physicsBody = SKPhysicsBody(rectangleOfSize: self.ground.size)
+        self.ground.physicsBody?.affectedByGravity = false
+        self.ground.physicsBody?.dynamic = false
+        self.ground.physicsBody?.categoryBitMask = ColliderType.ground.rawValue
+        self.ground.physicsBody?.contactTestBitMask = ColliderType.man.rawValue
+        self.ground.physicsBody?.collisionBitMask = ColliderType.man.rawValue
         
 
         
@@ -245,6 +274,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     isMoving = true
                     IsManRight = false
                     
+                    
                     }
         
             if self.nodeAtPoint(location) == self.rightControl {
@@ -253,6 +283,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 isMoving = true
                 IsManRight = true
                 
+                
+                }
+                
+                if self.nodeAtPoint(location) == self.elevator {
+                    
+                    elevatorGoUp = true
                 }
                 
             if self.nodeAtPoint(location) == self.jump {
@@ -357,9 +393,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func didBeginContact(/*otherBody: SKPhysicsBody,*/contact: SKPhysicsContact) {
         
+        if contact.bodyA.categoryBitMask == ColliderType.man.rawValue || contact.bodyB.categoryBitMask == ColliderType.ground.rawValue {
+            
+            onGround = true
+        }
+        
+        if contact.bodyA.categoryBitMask == ColliderType.elevator.rawValue || contact.bodyB.categoryBitMask == ColliderType.elevator.rawValue {
+            
+            print("ele")
+            self.man.position.y -= 3.0
+            onGround = true
+        }
+        
         
         if contact.bodyB.categoryBitMask == ColliderType.Bomb.rawValue {
-            print("das")
+            print("BOMB")
             watchBomb.removeFromParent()
             watchAttack0.removeFromParent()
         /*
@@ -420,6 +468,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             man.position.x -= CGFloat(self.manSpeed)
         } else if manRight {
             man.position.x += CGFloat(self.manSpeed)
+        }
+        
+        if onGround == true {
+            
+            velocityY = 0
+            
+        }
+        
+        if onGround == false {
+            
+            self.velocityY += self.gravity
+            self.man.position.y -= velocityY
         }
     }
     
@@ -594,22 +654,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func updateElevatorPosition(){
+        
+        if elevatorGoUp == true {
+            
+            if self.elevator.position.y < elevatorPosition + 100 {
+                
+                self.elevator.position.y += 3.0
+            }
+            
+            if self.elevator.position.y == elevatorPosition + 100 {
+                
+                elevatorGoUp = false
+            }
+        }
+    }
+    
     override func update(currentTime: CFTimeInterval) {
         
-        self.velocityY += self.gravity
-        self.man.position.y -= velocityY
-       
+        
+    
+       self.man.zRotation = 0
         updateManPosition()
         updateBullet1Position()
         updateWatchBombPosition()
         updateEnemyPosition()
+        updateElevatorPosition()
         
         
-            if self.man.position.y < self.manBaseline {
+            /*if self.man.position.y < self.manBaseline {
             self.man.position.y = self.manBaseline
             velocityY = 0.0
             self.man.zRotation = 0
-            self.onGround = true
+            self.onGround = true*/
                 
                 /*if watchBombIsOn == true {
                     
@@ -629,7 +706,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
                 
         
-        }
+        //}
     }
 }
 
